@@ -1,0 +1,112 @@
+#filterExample {
+	position:relative;
+	font: 13px "Times New Roman", "Times", serif;
+	color: #111;
+	margin-left:0px;
+	margin-top:20px;
+	margin-bottom:20px;
+	width:598px;
+}
+
+#filterExample p {
+	margin-top:15px;
+	margin-bottom:15px;
+}
+
+#filterExample i {
+	font: 13px "Times New Roman", "Times", serif;
+	font-style: italic;
+}
+
+.filterSidebar {
+	position:absolute;
+	left:420px;
+	width:170px;
+	font-size:12px;
+	color:#aaa;
+}
+
+.filterIndent {
+	position:relative;
+	margin-left: 40px;
+	margin-bottom:25px;
+}
+
+.filterDynamicLabel {
+	position:absolute;
+	width:40px;
+	height:14px;
+	font: 11px "Times New Roman", "Times", serif;
+	color: #00f;
+	background-color:rgba(200,0,0,0.3);
+	background-color:#fff;
+	text-align:center;
+	display:none;
+}
+
+.filterDynamicCoef {
+	position:absolute;
+	font: 13px "Times New Roman", "Times", serif;
+	color: #00f;
+	background-color:rgba(200,0,0,0.3);
+	background-color:#fff;
+	text-align:left;
+	display:none;
+}
+
+.FilterStepPlot {
+	position:absolute;
+	display:none;
+}
+
+.FilterTimePlot {
+	position:absolute;
+	display:none;
+}
+
+.FilterPolePlot {
+	position:absolute;
+	display:none;
+}
+
+.filterFreqPlot {
+	position:relative;
+	width:256px;
+	height:128px;
+	border-left:1px solid #222;
+	border-bottom:1px solid #222;
+}
+
+.filterUnstable {
+	position:absolute;
+	left:13px;
+	top:40px;
+	color:#f00;
+}
+
+.filterParams {
+	position:absolute;
+	color: #00f;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	padding-left: 6px;
+	padding-right: 6px;
+	pointer-events:none;
+}
+
+.FilterKnobHelp {
+	position:absolute;
+	display:none;
+	left:0px;
+	top:-13px;
+	color: #b0b0b0;
+	font: 11px "Times New Roman", "Times", serif;
+	font-style: italic;
+	pointer-events:none;
+}
+
+.cursorDrag {
+	cursor: pointer;
+	cursor: move;
+}
+

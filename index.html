@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Tangle document</title>
+
+    <!-- Tangle -->
+    <script type="text/javascript" src="Tangle/Tangle.js"></script>
+
+    <!-- TangleKit (optional) -->
+    <link rel="stylesheet" href="Tangle/TangleKit/TangleKit.css" type="text/css">
+    <script type="text/javascript" src="Tangle/TangleKit/mootools.js"></script>
+    <script type="text/javascript" src="Tangle/TangleKit/sprintf.js"></script>
+    <script type="text/javascript" src="Tangle/TangleKit/BVTouchable.js"></script>
+    <script type="text/javascript" src="Tangle/TangleKit/TangleKit.js"></script>
+
+    <!-- NVD3 -->
+    <link href="nvd3/src/nv.d3.css" rel="stylesheet" type="text/css">
+    <script src="nvd3/lib/d3.v3.js"></script>
+	<script src="nvd3/nv.d3.js"></script>
+	<script src="nvd3/src/models/legend.js"></script>
+	<script src="nvd3/src/models/line.js"></script>
+
+    <!-- example -->
+    <script type="text/javascript">
+    var graphWidth = 500,
+		graphHeight = 200,
+    	boilChart,
+    	ageChart,
+    	util_efficiency = 100,
+    	brewhouseFactor = 4.15,
+    	imperial_conversion_factor = 74.89,
+    	gravity = 1.050,
+    	boilDur = 60,
+    	boilIBU = 0,
+    	boilVolume = 5;
+    var AAU = new Array(0,0,0,0,0);
+    var hopTime = new Array(0,0,0,0,0);
+
+
+    	function setUpBoilChart () {
+    		nv.addGraph({
+			  generate: function() {
+			    boilChart = nv.models.lineChart()
+			                .width(graphWidth)
+			                .height(graphHeight);
+
+			    boilChart.xAxis
+					 .axisLabel('Boil Time (min)')
+					 .tickFormat(d3.format(',r'));
+				boilChart.yAxis
+					 .axisLabel('IBU')
+					 .tickFormat(d3.format('1.0f'));
+
+
+			    d3.select('#boilIBUplot')
+			      .attr('width', graphWidth)
+			      .attr('height', graphHeight)
+			      .datum(calcBoilIBU())
+			      .call(boilChart);
+
+			    return boilChart;
+			  }
+			});
+		}
+
+        function setUpTangle () {
+
+            var element = document.getElementById("params");
+
+            var tangle = new Tangle(element, {
+                initialize: function () {
+                    this.boilDur = boilDur;
+                    this.boilVolume = boilVolume;
+                    this.gravity = gravity;
+                    this.AA1 = 10;
+                    this.oz1 = 1;
+                    this.hopTime1 = 60;
+                    this.AA2 = 0;
+                    this.oz2 = 0;
+                    this.hopTime2 = 0;
+                    this.AA3 = 0;
+                    this.oz3 = 0;
+                    this.hopTime3 = 0;
+                    this.AA4 = 0;
+                    this.oz4 = 0;
+                    this.hopTime4 = 0;
+                    this.AA5 = 0;
+                    this.oz5 = 0;
+                    this.hopTime5 = 0;
+                    this.util_efficiency = 100;
+                },
+                update: function () {
+                    boilDur = this.boilDur;
+                    boilVolume = this.boilVolume;
+                    gravity = this.gravity;
+                    util_efficiency = this.util_efficiency;
+                    AAU[0] = this.AA1*this.oz1;
+                    AAU[1] = this.AA2*this.oz2;
+                    AAU[2] = this.AA3*this.oz3;
+                    AAU[3] = this.AA4*this.oz4;
+                    AAU[4] = this.AA5*this.oz5;
+                    hopTime[0] = this.hopTime1;
+                    hopTime[1] = this.hopTime2;
+                    hopTime[2] = this.hopTime3;
+                    hopTime[3] = this.hopTime4;
+                    hopTime[4] = this.hopTime5;
+
+                    calcTinsethIBU();
+                    this.boilIBU = boilIBU;
+                }
+            });
+        }
+
+        function redraw(){
+			d3.select('#boilIBUplot')
+			  .datum(calcTinsethIBU())
+			  .transition().duration(100)
+			  .call(boilChart);
+		}
+
+        function calcTinsethIBU() {
+			var IBU = [];
+			var localHopTime,
+				alpha_acids,
+				Bigness_factor,
+				Boil_Time_factor,
+				utilization;
+
+			for (var time=0; time<=boilDur; time++) {
+				localIBU = 0;
+				for (var hopIndex=0; hopIndex<AAU.length; hopIndex++) {
+					localHopTime = Math.max(0,(time-(boilDur-hopTime[hopIndex])));
+					alpha_acids = (AAU[hopIndex]* imperial_conversion_factor)/boilVolume;
+					Bigness_factor = 1.65 * Math.pow(0.000125,(gravity - 1));
+					Boil_Time_factor = (1 - Math.exp(-0.04 * localHopTime))/(brewhouseFactor/(util_efficiency/100));
+					utilization = Bigness_factor * Boil_Time_factor;
+
+					localIBU += (utilization*alpha_acids);
+				}
+				IBU.push({x: time, y: localIBU});
+				boilIBU = localIBU;
+			}
+
+			return [
+			{
+			  values: IBU,
+			  key: "IBU",
+			  color: "#0000ff"
+			}
+			];
+		}
+
+    </script>
+	<style>
+
+	body {
+	  overflow-y:scroll;
+	}
+
+	</style>
+</head>
+
+<body onload="setUpBoilChart(); setUpTangle();">
+
+	<b>International Bitterness Units</b> (based on <a href="http://realbeer.com/hops/research.html">Glenn Tinseth</a>'s formula)<br>
+	<hr>
+    <table id="params">
+		<tr>
+			<th align="left" width=200>boil time</th>
+			<td><span data-var="boilDur" class="TKAdjustableNumber" data-min="60" data-step="30" data-max="120"></span> min</td>
+		</tr>
+		<tr>
+			<th align="left">final wort volume</th>
+			<td><span data-var="boilVolume" class="TKAdjustableNumber" data-min="1" data-max="30"></span> gal</td>
+		<tr>
+			<th align="left">average gravity</th>
+			<td><span data-var="gravity" class="TKAdjustableNumber" data-min="1.000" data-step="0.001" data-max="1.200" data-format="%.3f"></span></td>
+		</tr>
+		<tr>
+			<th align="left">Hops addition 1</th>
+			<td><span data-var="AA1" class="TKAdjustableNumber" data-min="0" data-step="0.1" data-max="100" data-format="%.1f"></span>%AA</td>
+			<td> / <span data-var="oz1" class="TKAdjustableNumber" data-min="0" data-step="0.01" data-max="100" data-format="%.2f"></span>oz</td>
+			<td> / <script>var boilDur; document.write('<span data-var="hopTime1" class="TKAdjustableNumber" data-min="0" data-max="'+boilDur+'"')</script>></span> min</td>
+		</tr>
+		<tr>
+			<th align="left">Hops addition 2</th>
+			<td><span data-var="AA2" class="TKAdjustableNumber" data-min="0" data-step="0.1" data-max="100" data-format="%.1f"></span>%AA</td>
+			<td> / <span data-var="oz2" class="TKAdjustableNumber" data-min="0" data-step="0.01" data-max="100" data-format="%.2f"></span>oz</td>
+			<td> / <script>var boilDur; document.write('<span data-var="hopTime2" class="TKAdjustableNumber" data-min="0" data-max="'+boilDur+'"')</script>></span> min</td>
+		</tr>
+		<tr>
+			<th align="left">Hops addition 3</th>
+			<td><span data-var="AA3" class="TKAdjustableNumber" data-min="0" data-step="0.1" data-max="100" data-format="%.1f"></span>%AA</td>
+			<td> / <span data-var="oz3" class="TKAdjustableNumber" data-min="0" data-step="0.01" data-max="100" data-format="%.2f"></span>oz</td>
+			<td> / <script>var boilDur; document.write('<span data-var="hopTime3" class="TKAdjustableNumber" data-min="0" data-max="'+boilDur+'"')</script>></span> min</td>
+		</tr>
+		<tr>
+			<th align="left">Hops addition 4</th>
+			<td><span data-var="AA4" class="TKAdjustableNumber" data-min="0" data-step="0.1" data-max="100" data-format="%.1f"></span>%AA</td>
+			<td> / <span data-var="oz4" class="TKAdjustableNumber" data-min="0" data-step="0.01" data-max="100" data-format="%.2f"></span>oz</td>
+			<td> / <script>var boilDur; document.write('<span data-var="hopTime4" class="TKAdjustableNumber" data-min="0" data-max="'+boilDur+'"')</script>></span> min</td>
+		</tr>
+		<tr>
+			<th align="left">Hops addition 5</th>
+			<td><span data-var="AA5" class="TKAdjustableNumber" data-min="0" data-step="0.1" data-max="100" data-format="%.1f"></span>%AA</td>
+			<td> / <span data-var="oz5" class="TKAdjustableNumber" data-min="0" data-step="0.01" data-max="100" data-format="%.2f"></span>oz</td>
+			<td> / <script>document.write('<span data-var="hopTime5" class="TKAdjustableNumber" data-min="0" data-max="'+boilDur+'"')</script>></span> min</td>
+		</tr>
+		<tr>
+			<th align="left">Utilization Efficiency</th>
+			<td><span data-var="util_efficiency" class="TKAdjustableNumber" data-min="0"data-max="100"></span>%</td>
+		</tr>
+		<tr>
+			<th align="left">total IBU</th>
+			<td><span data-var="boilIBU" data-format="%.0f"></span></td>
+		</tr>
+    </table>
+
+
+    <svg id="boilIBUplot"></svg>
+
+    <script>
+    	setInterval(function() {redraw();}, 100);
+	</script>
+
+	why is this text way down here?
+
+</body>
+</html>
+
+
